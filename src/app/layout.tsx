@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Kannada } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
 import { Navbar } from "@/components/layout/Navbar";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import "./theme.css";
 const geistSans = Geist({
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <AuthProvider>
             <Navbar />
             {children}
+            <Toaster />
           </AuthProvider>
         </LanguageProvider>
       </body>

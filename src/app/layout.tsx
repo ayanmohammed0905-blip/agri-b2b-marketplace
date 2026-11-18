@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Kannada } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 import "./theme.css";
 const geistSans = Geist({
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          <Navbar />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

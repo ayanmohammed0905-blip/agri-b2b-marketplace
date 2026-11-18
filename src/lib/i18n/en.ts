@@ -10,6 +10,8 @@ export const en = {
     logout: "Logout",
     language: "Language",
     welcome: "Welcome! Sell your crops here.",
+    menu: "Menu",
+    tagline: "Direct from farm to business",
 };
 
 export type Dictionary = typeof en;

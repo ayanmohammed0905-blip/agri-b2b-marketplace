@@ -12,4 +12,6 @@ export const kn: Dictionary = {
     logout: "ಲಾಗ್ ಔಟ್",
     language: "ಭಾಷೆ",
     welcome: "ಸ್ವಾಗತ! ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ಇಲ್ಲಿ ಮಾರಾಟ ಮಾಡಿ.",
+    menu: "ಮೆನು",
+    tagline: "ಹೊಲದಿಂದ ನೇರವಾಗಿ ವ್ಯಾಪಾರಕ್ಕೆ",
 };

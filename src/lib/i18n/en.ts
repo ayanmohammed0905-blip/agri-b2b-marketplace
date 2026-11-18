@@ -100,6 +100,19 @@ export const en = {
     errDate: "Pick the harvest date",
     cancel: "Cancel",
     reportedOn: "Reported on",
+    marketplaceTitle: "Marketplace",
+    searchCrop: "Search crop name",
+    maxPrice: "Max price (₹/unit)",
+    minQuantity: "Min quantity",
+    allLocations: "All locations",
+    clearFilters: "Clear filters",
+    resultsCount: "listings found",
+    compare: "Compare",
+    compareSelected: "Compare selected",
+    selectUpToThree: "Select 2 or 3 listings to compare",
+    perUnit: "per",
+    viewDetails: "View details",
+    close: "Close",
 };
 
 export type Dictionary = typeof en;

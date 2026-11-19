@@ -149,6 +149,20 @@ export const en = {
     waitingFarmer: "Waiting for the farmer's next step",
     waitingBuyer: "Waiting for the buyer to confirm receipt",
     orderComplete: "Order complete. Thank you!",
+    voiceTitle: "Speak to add your crop",
+    voiceHint: "Example: I have 500 kg of tomatoes, price 20 rupees per kg",
+    startListening: "Tap and speak",
+    stopListening: "Stop",
+    listening: "Listening...",
+    heardText: "We heard",
+    voiceUnsupported: "Voice input is not supported in this browser. Please use Chrome or Edge, or type below.",
+    voiceError: "Could not hear you. Please try again.",
+    micDenied: "Microphone permission was denied.",
+    typeInstead: "Or type what you would say",
+    fillForm: "Fill the form",
+    voiceFilled: "Form filled. Please check the details before publishing.",
+    voiceNothing: "Could not find crop, quantity or price. Please try again or fill the form.",
+    voiceFound: "Found",
 };
 
 export type Dictionary = typeof en;

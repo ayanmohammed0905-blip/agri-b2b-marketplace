@@ -5,6 +5,7 @@ import { mockProfiles } from "@/lib/mock/data";
 
 const USERS_KEY = "agri-users-v1";
 const SESSION_KEY = "agri-session-v1";
+const OVERRIDES_KEY = "agri-profile-overrides-v1";
 
 function getStoredUsers(): Profile[] {
     try {
@@ -41,6 +42,34 @@ function clearSessionId(): void {
     } catch { }
 }
 
+function getProfileOverrides(): Record<string, Partial<Profile>> {
+    try {
+        const raw = localStorage.getItem(OVERRIDES_KEY);
+        if (raw) {
+            return JSON.parse(raw) as Record<string, Partial<Profile>>;
+        }
+    } catch { }
+    return {};
+}
+
+function saveProfileOverrides(overrides: Record<string, Partial<Profile>>): void {
+    try {
+        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+    } catch { }
+}
+
+function applyOverride(profile: Profile): Profile {
+    const overrides = getProfileOverrides();
+    const override = overrides[profile.id];
+    if (!override) {
+        return { ...profile };
+    }
+    return {
+        ...profile,
+        ...override,
+    };
+}
+
 function getAllUsers(): Profile[] {
     return [...mockProfiles, ...getStoredUsers()];
 }
@@ -61,8 +90,9 @@ export async function login(phone: string): Promise<Profile> {
     if (!user) {
         throw new Error("errNotFound");
     }
-    saveSessionId(user.id);
-    return user;
+    const mergedUser = applyOverride(user);
+    saveSessionId(mergedUser.id);
+    return mergedUser;
 }
 
 export async function register(input: RegisterInput): Promise<Profile> {
@@ -98,7 +128,49 @@ export async function getCurrentUser(): Promise<Profile | null> {
     }
     const allUsers = getAllUsers();
     const user = allUsers.find((u) => u.id === sessionId);
-    return user ?? null;
+    if (!user) {
+        return null;
+    }
+    return applyOverride(user);
+}
+
+// Will later call Supabase Auth / Database
+export async function updateProfile(
+    id: string,
+    changes: {
+        name?: string;
+        location?: string;
+        preferredLanguage?: Language;
+        businessName?: string;
+    }
+): Promise<Profile> {
+    const allUsers = getAllUsers();
+    const baseUser = allUsers.find((u) => u.id === id);
+    if (!baseUser) {
+        throw new Error("Profile not found");
+    }
+
+    const overrides = getProfileOverrides();
+    const currentOverride = overrides[id] || {};
+
+    const cleanChanges: Partial<Profile> = {};
+    if (changes.name !== undefined) cleanChanges.name = changes.name.trim();
+    if (changes.location !== undefined) cleanChanges.location = changes.location.trim();
+    if (changes.preferredLanguage !== undefined) cleanChanges.preferredLanguage = changes.preferredLanguage;
+    if (changes.businessName !== undefined) cleanChanges.businessName = changes.businessName.trim();
+
+    const newOverride: Partial<Profile> = {
+        ...currentOverride,
+        ...cleanChanges,
+    };
+
+    overrides[id] = newOverride;
+    saveProfileOverrides(overrides);
+
+    return {
+        ...baseUser,
+        ...newOverride,
+    };
 }
 
 export async function logout(): Promise<void> {

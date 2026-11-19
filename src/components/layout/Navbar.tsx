@@ -40,22 +40,62 @@ export function Navbar() {
                 </Link>
 
                 {/* Middle (hidden below md) */}
-                <div className="hidden md:flex items-center gap-6">
-                    <Link href="/" className="text-sm text-white/80 hover:text-white">
-                        {t("home")}
-                    </Link>
+                <div className="hidden md:flex items-center gap-3 lg:gap-5">
+                    {!user && (
+                        <Link href="/" className="text-sm text-white/80 hover:text-white whitespace-nowrap">
+                            {t("home")}
+                        </Link>
+                    )}
                     <Link
                         href="/buyer/marketplace"
-                        className="text-sm text-white/80 hover:text-white"
+                        className="text-sm text-white/80 hover:text-white whitespace-nowrap"
                     >
                         {t("marketplace")}
                     </Link>
                     <Link
                         href={dashboardHref}
-                        className="text-sm text-white/80 hover:text-white"
+                        className="text-sm text-white/80 hover:text-white whitespace-nowrap"
                     >
                         {t("dashboard")}
                     </Link>
+                    {user && user.role === "farmer" && (
+                        <>
+                            <Link
+                                href="/farmer/dashboard"
+                                className="text-sm text-white/80 hover:text-white whitespace-nowrap"
+                            >
+                                {t("myListings")}
+                            </Link>
+                            <Link
+                                href="/farmer/listings/new"
+                                className="text-sm text-white/80 hover:text-white whitespace-nowrap"
+                            >
+                                {t("addCrop")}
+                            </Link>
+                            <Link
+                                href="/farmer/orders"
+                                className="text-sm text-white/80 hover:text-white whitespace-nowrap"
+                            >
+                                {t("viewOrders")}
+                            </Link>
+                        </>
+                    )}
+                    {user && user.role === "buyer" && (
+                        <Link
+                            href="/buyer/orders"
+                            className="text-sm text-white/80 hover:text-white whitespace-nowrap"
+                        >
+                            {t("viewOrders")}
+                        </Link>
+                    )}
+                    {user && (
+                        <Link
+                            href="/profile"
+                            className="text-sm text-white/80 hover:text-white whitespace-nowrap"
+                        >
+                            {t("profile")}
+                        </Link>
+                    )}
                 </div>
 
                 {/* Right (hidden below md) */}
@@ -65,7 +105,7 @@ export function Navbar() {
                     {!loading && (
                         user ? (
                             <>
-                                <span className="text-sm font-medium text-white/90">
+                                <span className="text-sm font-medium text-white/90 truncate max-w-[150px]">
                                     {user.name}
                                 </span>
                                 <Button variant="outline" onClick={handleLogout}>
@@ -101,13 +141,15 @@ export function Navbar() {
             {isOpen && (
                 <div className="border-b border-white/10 bg-brand-dark px-4 py-4 md:hidden">
                     <nav className="flex flex-col gap-1">
-                        <Link
-                            href="/"
-                            onClick={() => setIsOpen(false)}
-                            className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
-                        >
-                            {t("home")}
-                        </Link>
+                        {!user && (
+                            <Link
+                                href="/"
+                                onClick={() => setIsOpen(false)}
+                                className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                            >
+                                {t("home")}
+                            </Link>
+                        )}
                         <Link
                             href="/buyer/marketplace"
                             onClick={() => setIsOpen(false)}
@@ -122,6 +164,52 @@ export function Navbar() {
                         >
                             {t("dashboard")}
                         </Link>
+
+                        {user && user.role === "farmer" && (
+                            <>
+                                <Link
+                                    href="/farmer/dashboard"
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                                >
+                                    {t("myListings")}
+                                </Link>
+                                <Link
+                                    href="/farmer/listings/new"
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                                >
+                                    {t("addCrop")}
+                                </Link>
+                                <Link
+                                    href="/farmer/orders"
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                                >
+                                    {t("viewOrders")}
+                                </Link>
+                            </>
+                        )}
+
+                        {user && user.role === "buyer" && (
+                            <Link
+                                href="/buyer/orders"
+                                onClick={() => setIsOpen(false)}
+                                className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                            >
+                                {t("viewOrders")}
+                            </Link>
+                        )}
+
+                        {user && (
+                            <Link
+                                href="/profile"
+                                onClick={() => setIsOpen(false)}
+                                className="flex min-h-[44px] items-center text-sm text-white/80 hover:text-white"
+                            >
+                                {t("profile")}
+                            </Link>
+                        )}
 
                         <div className="my-2 border-t border-white/10" />
 

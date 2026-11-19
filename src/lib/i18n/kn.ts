@@ -165,4 +165,13 @@ export const kn: Dictionary = {
     voiceFilled: "ಫಾರ್ಮ್ ತುಂಬಲಾಗಿದೆ. ಪ್ರಕಟಿಸುವ ಮೊದಲು ವಿವರ ಪರಿಶೀಲಿಸಿ.",
     voiceNothing: "ಬೆಳೆ, ಪ್ರಮಾಣ ಅಥವಾ ಬೆಲೆ ಸಿಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ ಅಥವಾ ಫಾರ್ಮ್ ತುಂಬಿ.",
     voiceFound: "ಸಿಕ್ಕಿದ್ದು",
+    profile: "ಪ್ರೊಫೈಲ್",
+    profileTitle: "ಪ್ರೊಫೈಲ್ ಮತ್ತು ಸೆಟ್ಟಿಂಗ್ಸ್",
+    accountInfo: "ಖಾತೆ ಮಾಹಿತಿ",
+    accountType: "ಖಾತೆಯ ಪ್ರಕಾರ",
+    preferredLanguage: "ಆದ್ಯತೆಯ ಭಾಷೆ",
+    phoneLocked: "ಈ ಡೆಮೊದಲ್ಲಿ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಬದಲಾಯಿಸಲಾಗುವುದಿಲ್ಲ",
+    saveChanges: "ಬದಲಾವಣೆ ಉಳಿಸಿ",
+    profileSaved: "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಿದೆ",
+    myListings: "ನನ್ನ ಪಟ್ಟಿಗಳು",
 };

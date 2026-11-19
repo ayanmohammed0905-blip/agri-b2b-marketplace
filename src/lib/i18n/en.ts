@@ -163,6 +163,15 @@ export const en = {
     voiceFilled: "Form filled. Please check the details before publishing.",
     voiceNothing: "Could not find crop, quantity or price. Please try again or fill the form.",
     voiceFound: "Found",
+    profile: "Profile",
+    profileTitle: "Profile and settings",
+    accountInfo: "Account information",
+    accountType: "Account type",
+    preferredLanguage: "Preferred language",
+    phoneLocked: "Phone number cannot be changed in this demo",
+    saveChanges: "Save changes",
+    profileSaved: "Profile saved",
+    myListings: "My listings",
 };
 
 export type Dictionary = typeof en;

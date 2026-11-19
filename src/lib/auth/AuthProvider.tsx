@@ -1,11 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import type { Profile, UserRole } from "@/lib/types";
+import type { Profile, UserRole, Language } from "@/lib/types";
 import {
     login as authLogin,
     register as authRegister,
     getCurrentUser,
+    updateProfile as authUpdateProfile,
     logout as authLogout,
     type RegisterInput,
 } from "@/lib/services/auth";
@@ -15,6 +16,12 @@ export interface AuthContextValue {
     loading: boolean;
     login(phone: string): Promise<Profile>;
     register(input: RegisterInput): Promise<Profile>;
+    updateProfile(changes: {
+        name?: string;
+        location?: string;
+        preferredLanguage?: Language;
+        businessName?: string;
+    }): Promise<Profile>;
     logout(): Promise<void>;
 }
 
@@ -57,13 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return profile;
     };
 
+    const updateProfile = async (changes: {
+        name?: string;
+        location?: string;
+        preferredLanguage?: Language;
+        businessName?: string;
+    }): Promise<Profile> => {
+        if (!user) {
+            throw new Error("No authenticated user");
+        }
+        const updated = await authUpdateProfile(user.id, changes);
+        setUser(updated);
+        return updated;
+    };
+
     const logout = async (): Promise<void> => {
         await authLogout();
         setUser(null);
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, register, updateProfile, logout }}>
             {children}
         </AuthContext.Provider>
     );

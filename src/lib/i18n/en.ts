@@ -139,6 +139,16 @@ export const en = {
     viewOrder: "View order",
     orderNotFound: "Order not found",
     viewOrders: "View orders",
+    trackingTitle: "Delivery tracking",
+    schedulePickup: "Schedule pickup",
+    markPickedUp: "Mark as picked up",
+    markInTransit: "Mark in transit",
+    markDelivered: "Mark as delivered",
+    confirmReceipt: "Confirm receipt",
+    statusUpdated: "Status updated",
+    waitingFarmer: "Waiting for the farmer's next step",
+    waitingBuyer: "Waiting for the buyer to confirm receipt",
+    orderComplete: "Order complete. Thank you!",
 };
 
 export type Dictionary = typeof en;

@@ -3,11 +3,12 @@
 import { Suspense, use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, User } from "lucide-react";
+import { ArrowLeft, CheckCircle, User } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusStepper } from "@/components/orders/StatusStepper";
 import { useAuth, homePathForRole } from "@/lib/auth/AuthProvider";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { statusKey } from "@/lib/statusKeys";
@@ -164,6 +165,23 @@ function OrderDetailsContent({ params }: PageProps) {
         }
     };
 
+    const handleUpdateStatus = async (nextStatus: OrderStatus) => {
+        setIsProcessing(true);
+        try {
+            await updateOrderStatus(order.id, nextStatus);
+            toast.success(t("statusUpdated"));
+            await loadOrderData();
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            toast.error(message);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const isFarmer = user.role === "farmer";
+    const isBuyer = user.role === "buyer";
+
     return (
         <main className="mx-auto max-w-7xl px-4 py-8 pb-16">
             <div className="flex flex-col gap-8">
@@ -236,6 +254,129 @@ function OrderDetailsContent({ params }: PageProps) {
                     </CardContent>
                 </Card>
 
+                {/* Delivery Tracking Card placed below the order summary */}
+                <Card className="p-6">
+                    <CardHeader className="p-0 pb-6">
+                        <CardTitle className="text-xl font-bold">
+                            {t("trackingTitle")}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-6 p-0">
+                        {/* Status Stepper */}
+                        <StatusStepper status={order.status} />
+
+                        {/* Action area below the stepper */}
+                        <div className="border-t border-border pt-4">
+                            {/* Confirmed status for both farmer and buyer */}
+                            {order.status === "confirmed" && (
+                                <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-900/50 dark:bg-green-950/40 dark:text-green-300">
+                                    <CheckCircle className="size-6 shrink-0 text-green-600 dark:text-green-400" />
+                                    <span className="text-base font-semibold">{t("orderComplete")}</span>
+                                </div>
+                            )}
+
+                            {/* Farmer action area */}
+                            {isFarmer && order.status !== "confirmed" && (
+                                <>
+                                    {order.status === "requested" && (
+                                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                                            <Button
+                                                size="lg"
+                                                disabled={isProcessing}
+                                                onClick={handleAccept}
+                                                className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                            >
+                                                {isProcessing ? t("loading") : t("accept")}
+                                            </Button>
+                                            <Button
+                                                size="lg"
+                                                variant="outline"
+                                                disabled={isProcessing}
+                                                onClick={handleReject}
+                                                className="min-h-12 w-full sm:w-auto px-8 text-base font-bold text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
+                                            >
+                                                {isProcessing ? t("loading") : t("reject")}
+                                            </Button>
+                                        </div>
+                                    )}
+
+                                    {order.status === "accepted" && (
+                                        <Button
+                                            size="lg"
+                                            disabled={isProcessing}
+                                            onClick={() => handleUpdateStatus("pickup_scheduled")}
+                                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                        >
+                                            {isProcessing ? t("loading") : t("schedulePickup")}
+                                        </Button>
+                                    )}
+
+                                    {order.status === "pickup_scheduled" && (
+                                        <Button
+                                            size="lg"
+                                            disabled={isProcessing}
+                                            onClick={() => handleUpdateStatus("picked_up")}
+                                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                        >
+                                            {isProcessing ? t("loading") : t("markPickedUp")}
+                                        </Button>
+                                    )}
+
+                                    {order.status === "picked_up" && (
+                                        <Button
+                                            size="lg"
+                                            disabled={isProcessing}
+                                            onClick={() => handleUpdateStatus("in_transit")}
+                                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                        >
+                                            {isProcessing ? t("loading") : t("markInTransit")}
+                                        </Button>
+                                    )}
+
+                                    {order.status === "in_transit" && (
+                                        <Button
+                                            size="lg"
+                                            disabled={isProcessing}
+                                            onClick={() => handleUpdateStatus("delivered")}
+                                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                        >
+                                            {isProcessing ? t("loading") : t("markDelivered")}
+                                        </Button>
+                                    )}
+
+                                    {order.status === "delivered" && (
+                                        <div className="rounded-lg border border-border bg-muted/50 p-4 text-base font-medium text-muted-foreground">
+                                            {t("waitingBuyer")}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Buyer action area */}
+                            {isBuyer && order.status !== "confirmed" && (
+                                <>
+                                    {order.status === "delivered" ? (
+                                        <Button
+                                            size="lg"
+                                            disabled={isProcessing}
+                                            onClick={() => handleUpdateStatus("confirmed")}
+                                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
+                                        >
+                                            {isProcessing ? t("loading") : t("confirmReceipt")}
+                                        </Button>
+                                    ) : (
+                                        order.status !== "rejected" && (
+                                            <div className="rounded-lg border border-border bg-muted/50 p-4 text-base font-medium text-muted-foreground">
+                                                {t("waitingFarmer")}
+                                            </div>
+                                        )
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
                 {/* Buyer and Farmer Cards */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Buyer card */}
@@ -292,29 +433,6 @@ function OrderDetailsContent({ params }: PageProps) {
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Farmer action buttons when status is "requested" */}
-                {user.role === "farmer" && order.status === "requested" && (
-                    <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                        <Button
-                            size="lg"
-                            disabled={isProcessing}
-                            onClick={handleAccept}
-                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold"
-                        >
-                            {isProcessing ? t("loading") : t("accept")}
-                        </Button>
-                        <Button
-                            size="lg"
-                            variant="outline"
-                            disabled={isProcessing}
-                            onClick={handleReject}
-                            className="min-h-12 w-full sm:w-auto px-8 text-base font-bold text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/10"
-                        >
-                            {isProcessing ? t("loading") : t("reject")}
-                        </Button>
-                    </div>
-                )}
             </div>
         </main>
     );

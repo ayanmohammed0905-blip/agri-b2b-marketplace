@@ -108,12 +108,19 @@ export default function FarmerDashboardPage() {
                             {t("hello")}, {user.name}
                         </p>
                     </div>
-                    <Button size="lg" asChild className="min-h-14 gap-2 px-6 text-lg">
-                        <Link href="/farmer/listings/new">
-                            <Plus className="size-6" />
-                            <span>{t("addCrop")}</span>
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button size="lg" variant="outline" asChild className="min-h-12 gap-2 px-6 text-base md:text-lg">
+                            <Link href="/farmer/orders">
+                                <span>{t("viewOrders")}</span>
+                            </Link>
+                        </Button>
+                        <Button size="lg" asChild className="min-h-14 gap-2 px-6 text-lg">
+                            <Link href="/farmer/listings/new">
+                                <Plus className="size-6" />
+                                <span>{t("addCrop")}</span>
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* 4 Stat Cards */}

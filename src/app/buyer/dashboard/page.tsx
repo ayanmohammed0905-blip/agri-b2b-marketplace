@@ -102,12 +102,19 @@ export default function BuyerDashboardPage() {
                             {user.businessName ? ` (${user.businessName})` : ""}
                         </p>
                     </div>
-                    <Button size="lg" asChild className="min-h-14 gap-2 px-6 text-lg">
-                        <Link href="/buyer/marketplace">
-                            <Search className="size-6" />
-                            <span>{t("browseMarket")}</span>
-                        </Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button size="lg" variant="outline" asChild className="min-h-12 gap-2 px-6 text-base md:text-lg">
+                            <Link href="/buyer/orders">
+                                <span>{t("viewOrders")}</span>
+                            </Link>
+                        </Button>
+                        <Button size="lg" asChild className="min-h-14 gap-2 px-6 text-lg">
+                            <Link href="/buyer/marketplace">
+                                <Search className="size-6" />
+                                <span>{t("browseMarket")}</span>
+                            </Link>
+                        </Button>
+                    </div>
                 </div>
 
                 {/* 2 Stat Cards */}

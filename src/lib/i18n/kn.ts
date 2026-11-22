@@ -174,4 +174,7 @@ export const kn: Dictionary = {
     saveChanges: "ಬದಲಾವಣೆ ಉಳಿಸಿ",
     profileSaved: "ಪ್ರೊಫೈಲ್ ಉಳಿಸಲಾಗಿದೆ",
     myListings: "ನನ್ನ ಪಟ್ಟಿಗಳು",
+    password: "ಪಾಸ್ವರ್ಡ್",
+    errPassword: "ಪಾಸ್ವರ್ಡ್ ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳಿರಬೇಕು",
+    errLogin: "ತಪ್ಪು ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಅಥವಾ ಪಾಸ್ವರ್ಡ್",
 };

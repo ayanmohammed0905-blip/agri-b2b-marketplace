@@ -1,11 +1,19 @@
-// Mock auth service, will later call Supabase Auth.
-
 import type { Profile, UserRole, Language } from "@/lib/types";
 import { mockProfiles } from "@/lib/mock/data";
+import { getSupabase } from "@/lib/supabase/client";
+import { profileFromRow, type ProfileRow } from "@/lib/supabase/mappers";
 
 const USERS_KEY = "agri-users-v1";
 const SESSION_KEY = "agri-session-v1";
 const OVERRIDES_KEY = "agri-profile-overrides-v1";
+
+function isSupabaseMode(): boolean {
+    return process.env.NEXT_PUBLIC_BACKEND === "supabase";
+}
+
+function emailFromPhone(phone: string): string {
+    return `${phone.trim()}@agri.local`;
+}
 
 function getStoredUsers(): Profile[] {
     try {
@@ -81,60 +89,153 @@ export interface RegisterInput {
     role: UserRole;
     preferredLanguage: Language;
     businessName?: string;
+    password?: string;
 }
 
-export async function login(phone: string): Promise<Profile> {
+export async function login(phone: string, password?: string): Promise<Profile> {
     const trimmedPhone = phone.trim();
-    const allUsers = getAllUsers();
-    const user = allUsers.find((u) => u.phone === trimmedPhone);
-    if (!user) {
-        throw new Error("errNotFound");
+
+    if (!isSupabaseMode()) {
+        const allUsers = getAllUsers();
+        const user = allUsers.find((u) => u.phone === trimmedPhone);
+        if (!user) {
+            throw new Error("errNotFound");
+        }
+        const mergedUser = applyOverride(user);
+        saveSessionId(mergedUser.id);
+        return mergedUser;
     }
-    const mergedUser = applyOverride(user);
-    saveSessionId(mergedUser.id);
-    return mergedUser;
+
+    const supabase = getSupabase();
+    const email = emailFromPhone(trimmedPhone);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: password || "",
+    });
+
+    if (error || !data.user) {
+        throw new Error("errLogin");
+    }
+
+    const { data: profileRow, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role, name, phone, location, preferred_language, business_name")
+        .eq("id", data.user.id)
+        .single();
+
+    if (profileError || !profileRow) {
+        throw new Error("errLogin");
+    }
+
+    return profileFromRow(profileRow as ProfileRow);
 }
 
-export async function register(input: RegisterInput): Promise<Profile> {
+export async function register(input: RegisterInput, password?: string): Promise<Profile> {
     const trimmedPhone = input.phone.trim();
-    const allUsers = getAllUsers();
-    const exists = allUsers.some((u) => u.phone === trimmedPhone);
-    if (exists) {
+    const pwd = password || input.password || "";
+
+    if (!isSupabaseMode()) {
+        const allUsers = getAllUsers();
+        const exists = allUsers.some((u) => u.phone === trimmedPhone);
+        if (exists) {
+            throw new Error("errExists");
+        }
+
+        const newProfile: Profile = {
+            id: `u${Date.now()}`,
+            name: input.name.trim(),
+            phone: trimmedPhone,
+            location: input.location.trim(),
+            role: input.role,
+            preferredLanguage: input.preferredLanguage,
+            ...(input.businessName ? { businessName: input.businessName.trim() } : {}),
+        };
+
+        const storedUsers = getStoredUsers();
+        storedUsers.push(newProfile);
+        saveStoredUsers(storedUsers);
+        saveSessionId(newProfile.id);
+
+        return newProfile;
+    }
+
+    const supabase = getSupabase();
+    const email = emailFromPhone(trimmedPhone);
+
+    const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pwd,
+        options: {
+            data: {
+                role: input.role,
+                name: input.name.trim(),
+                phone: trimmedPhone,
+                location: input.location.trim(),
+                preferred_language: input.preferredLanguage,
+                business_name: input.businessName?.trim() || null,
+            },
+        },
+    });
+
+    if (error) {
         throw new Error("errExists");
     }
 
-    const newProfile: Profile = {
-        id: `u${Date.now()}`,
-        name: input.name.trim(),
-        phone: trimmedPhone,
-        location: input.location.trim(),
-        role: input.role,
-        preferredLanguage: input.preferredLanguage,
-        ...(input.businessName ? { businessName: input.businessName.trim() } : {}),
-    };
+    if (!data.user || (data.user.identities && data.user.identities.length === 0)) {
+        throw new Error("errExists");
+    }
 
-    const storedUsers = getStoredUsers();
-    storedUsers.push(newProfile);
-    saveStoredUsers(storedUsers);
-    saveSessionId(newProfile.id);
+    const { data: profileRow, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role, name, phone, location, preferred_language, business_name")
+        .eq("id", data.user.id)
+        .single();
 
-    return newProfile;
+    if (profileError || !profileRow) {
+        throw new Error(profileError?.message || "Failed to load profile");
+    }
+
+    return profileFromRow(profileRow as ProfileRow);
 }
 
 export async function getCurrentUser(): Promise<Profile | null> {
-    const sessionId = getSessionId();
-    if (!sessionId) {
+    if (!isSupabaseMode()) {
+        const sessionId = getSessionId();
+        if (!sessionId) {
+            return null;
+        }
+        const allUsers = getAllUsers();
+        const user = allUsers.find((u) => u.id === sessionId);
+        if (!user) {
+            return null;
+        }
+        return applyOverride(user);
+    }
+
+    const supabase = getSupabase();
+    const {
+        data: { session },
+        error,
+    } = await supabase.auth.getSession();
+
+    if (error || !session?.user) {
         return null;
     }
-    const allUsers = getAllUsers();
-    const user = allUsers.find((u) => u.id === sessionId);
-    if (!user) {
+
+    const { data: profileRow, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role, name, phone, location, preferred_language, business_name")
+        .eq("id", session.user.id)
+        .single();
+
+    if (profileError || !profileRow) {
         return null;
     }
-    return applyOverride(user);
+
+    return profileFromRow(profileRow as ProfileRow);
 }
 
-// Will later call Supabase Auth / Database
 export async function updateProfile(
     id: string,
     changes: {
@@ -144,35 +245,72 @@ export async function updateProfile(
         businessName?: string;
     }
 ): Promise<Profile> {
-    const allUsers = getAllUsers();
-    const baseUser = allUsers.find((u) => u.id === id);
-    if (!baseUser) {
-        throw new Error("Profile not found");
+    if (!isSupabaseMode()) {
+        const allUsers = getAllUsers();
+        const baseUser = allUsers.find((u) => u.id === id);
+        if (!baseUser) {
+            throw new Error("Profile not found");
+        }
+
+        const overrides = getProfileOverrides();
+        const currentOverride = overrides[id] || {};
+
+        const cleanChanges: Partial<Profile> = {};
+        if (changes.name !== undefined) cleanChanges.name = changes.name.trim();
+        if (changes.location !== undefined) cleanChanges.location = changes.location.trim();
+        if (changes.preferredLanguage !== undefined) cleanChanges.preferredLanguage = changes.preferredLanguage;
+        if (changes.businessName !== undefined) cleanChanges.businessName = changes.businessName.trim();
+
+        const newOverride: Partial<Profile> = {
+            ...currentOverride,
+            ...cleanChanges,
+        };
+
+        overrides[id] = newOverride;
+        saveProfileOverrides(overrides);
+
+        return {
+            ...baseUser,
+            ...newOverride,
+        };
     }
 
-    const overrides = getProfileOverrides();
-    const currentOverride = overrides[id] || {};
+    const supabase = getSupabase();
+    const updates: {
+        name?: string;
+        location?: string;
+        preferred_language?: Language;
+        business_name?: string | null;
+    } = {};
 
-    const cleanChanges: Partial<Profile> = {};
-    if (changes.name !== undefined) cleanChanges.name = changes.name.trim();
-    if (changes.location !== undefined) cleanChanges.location = changes.location.trim();
-    if (changes.preferredLanguage !== undefined) cleanChanges.preferredLanguage = changes.preferredLanguage;
-    if (changes.businessName !== undefined) cleanChanges.businessName = changes.businessName.trim();
+    if (changes.name !== undefined) updates.name = changes.name.trim();
+    if (changes.location !== undefined) updates.location = changes.location.trim();
+    if (changes.preferredLanguage !== undefined) updates.preferred_language = changes.preferredLanguage;
+    if (changes.businessName !== undefined) {
+        const trimmed = changes.businessName.trim();
+        updates.business_name = trimmed.length > 0 ? trimmed : null;
+    }
 
-    const newOverride: Partial<Profile> = {
-        ...currentOverride,
-        ...cleanChanges,
-    };
+    const { data: profileRow, error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", id)
+        .select("id, role, name, phone, location, preferred_language, business_name")
+        .single();
 
-    overrides[id] = newOverride;
-    saveProfileOverrides(overrides);
+    if (error || !profileRow) {
+        throw new Error(error?.message || "Failed to update profile");
+    }
 
-    return {
-        ...baseUser,
-        ...newOverride,
-    };
+    return profileFromRow(profileRow as ProfileRow);
 }
 
 export async function logout(): Promise<void> {
-    clearSessionId();
+    if (!isSupabaseMode()) {
+        clearSessionId();
+        return;
+    }
+
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
 }

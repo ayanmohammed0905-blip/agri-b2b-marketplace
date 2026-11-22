@@ -172,6 +172,9 @@ export const en = {
     saveChanges: "Save changes",
     profileSaved: "Profile saved",
     myListings: "My listings",
+    password: "Password",
+    errPassword: "Password must be at least 6 characters",
+    errLogin: "Wrong phone number or password",
 };
 
 export type Dictionary = typeof en;

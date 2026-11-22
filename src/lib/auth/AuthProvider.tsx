@@ -14,8 +14,8 @@ import {
 export interface AuthContextValue {
     user: Profile | null;
     loading: boolean;
-    login(phone: string): Promise<Profile>;
-    register(input: RegisterInput): Promise<Profile>;
+    login(phone: string, password?: string): Promise<Profile>;
+    register(input: RegisterInput, password?: string): Promise<Profile>;
     updateProfile(changes: {
         name?: string;
         location?: string;
@@ -52,14 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    const login = async (phone: string): Promise<Profile> => {
-        const profile = await authLogin(phone);
+    const login = async (phone: string, password?: string): Promise<Profile> => {
+        const profile = await authLogin(phone, password);
         setUser(profile);
         return profile;
     };
 
-    const register = async (input: RegisterInput): Promise<Profile> => {
-        const profile = await authRegister(input);
+    const register = async (input: RegisterInput, password?: string): Promise<Profile> => {
+        const profile = await authRegister(input, password);
         setUser(profile);
         return profile;
     };
@@ -101,3 +101,4 @@ export function useAuth(): AuthContextValue {
 export function homePathForRole(role: UserRole): string {
     return role === "farmer" ? "/farmer/dashboard" : "/buyer/dashboard";
 }
+

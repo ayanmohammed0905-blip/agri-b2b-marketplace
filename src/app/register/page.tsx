@@ -19,6 +19,7 @@ const registerSchema = z.object({
     role: z.enum(["farmer", "buyer"]),
     name: z.string().min(2, { message: "errName" }),
     phone: z.string().regex(/^[6-9]\d{9}$/, { message: "errPhone" }),
+    password: z.string().min(6, { message: "errPassword" }),
     location: z.string().min(2, { message: "errLocation" }),
     businessName: z.string().optional(),
 });
@@ -48,6 +49,7 @@ function RegisterForm() {
             role: initialRole,
             name: "",
             phone: "",
+            password: "",
             location: "",
             businessName: "",
         },
@@ -58,14 +60,17 @@ function RegisterForm() {
     const onSubmit = async (data: RegisterFormData) => {
         try {
             setServerError(null);
-            const user = await authRegister({
-                name: data.name,
-                phone: data.phone,
-                location: data.location,
-                role: data.role,
-                preferredLanguage: language,
-                businessName: data.role === "buyer" && data.businessName ? data.businessName : undefined,
-            });
+            const user = await authRegister(
+                {
+                    name: data.name,
+                    phone: data.phone,
+                    location: data.location,
+                    role: data.role,
+                    preferredLanguage: language,
+                    businessName: data.role === "buyer" && data.businessName ? data.businessName : undefined,
+                },
+                data.password
+            );
             router.push(homePathForRole(user.role));
         } catch (err) {
             if (err instanceof Error && err.message === "errExists") {
@@ -142,6 +147,22 @@ function RegisterForm() {
                             {errors.phone?.message && (
                                 <p className="text-sm font-medium text-destructive">
                                     {t(errors.phone.message as keyof Dictionary)}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Password */}
+                        <div className="flex flex-col gap-1.5">
+                            <Label htmlFor="password" className="text-base">{t("password")}</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                className="min-h-12 text-base"
+                                {...register("password")}
+                            />
+                            {errors.password?.message && (
+                                <p className="text-sm font-medium text-destructive">
+                                    {t(errors.password.message as keyof Dictionary)}
                                 </p>
                             )}
                         </div>

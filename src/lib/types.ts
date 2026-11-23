@@ -14,6 +14,7 @@ export interface Profile {
 export interface Listing {
     id: string;
     farmerId: string;
+    farmerName?: string;
     crop: string;
     variety?: string;
     quantity: number;

@@ -108,8 +108,8 @@ export default function BuyerOrdersPage() {
                             <OrderCard
                                 key={order.id}
                                 order={order}
-                                cropName={cropNames[order.listingId] || order.listingId}
-                                otherPartyName={farmerNames[order.farmerId] || t("farmerInfo")}
+                                cropName={cropNames[order.listingId] || order.crop || order.listingId}
+                                otherPartyName={farmerNames[order.farmerId] || order.farmerName || t("farmerInfo")}
                                 href={`/orders/${order.id}`}
                             />
                         ))}

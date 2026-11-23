@@ -81,9 +81,9 @@ function OrderDetailsContent({ params }: PageProps) {
                     getProfileById(ord.buyerId),
                     getProfileById(ord.farmerId),
                 ]);
-                setListing(lst);
-                setBuyer(bProfile);
-                setFarmer(fProfile);
+                setListing(lst ?? ord.listing ?? null);
+                setBuyer(bProfile ?? ord.buyer ?? null);
+                setFarmer(fProfile ?? ord.farmer ?? null);
             }
         } catch {
             setOrder(null);

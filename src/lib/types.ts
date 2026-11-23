@@ -57,4 +57,10 @@ export interface Order {
     status: OrderStatus;
     createdAt: string;
     updatedAt: string;
+    crop?: string;
+    farmerName?: string;
+    buyerName?: string;
+    listing?: Listing;
+    farmer?: Profile;
+    buyer?: Profile;
 }

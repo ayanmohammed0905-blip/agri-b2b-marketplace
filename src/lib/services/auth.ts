@@ -7,12 +7,14 @@ const USERS_KEY = "agri-users-v1";
 const SESSION_KEY = "agri-session-v1";
 const OVERRIDES_KEY = "agri-profile-overrides-v1";
 
+const HIDDEN_EMAIL_DOMAIN = "@agrimarket.in";
+
 function isSupabaseMode(): boolean {
     return process.env.NEXT_PUBLIC_BACKEND === "supabase";
 }
 
 function emailFromPhone(phone: string): string {
-    return `${phone.trim()}@agri.local`;
+    return `${phone.trim()}${HIDDEN_EMAIL_DOMAIN}`;
 }
 
 function getStoredUsers(): Profile[] {
@@ -107,14 +109,26 @@ export async function login(phone: string, password?: string): Promise<Profile> 
     }
 
     const supabase = getSupabase();
-    const email = emailFromPhone(trimmedPhone);
+    const email = `${trimmedPhone}${HIDDEN_EMAIL_DOMAIN}`;
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: password || "",
     });
 
-    if (error || !data.user) {
+    if (error) {
+        console.error(error);
+        const isInvalidCreds =
+            error.code === "invalid_credentials" ||
+            error.message.includes("Invalid login credentials") ||
+            error.message.toLowerCase().includes("invalid login credentials");
+        if (isInvalidCreds) {
+            throw new Error("errLogin");
+        }
+        throw new Error(error.message);
+    }
+
+    if (!data.user) {
         throw new Error("errLogin");
     }
 
@@ -125,7 +139,10 @@ export async function login(phone: string, password?: string): Promise<Profile> 
         .single();
 
     if (profileError || !profileRow) {
-        throw new Error("errLogin");
+        if (profileError) {
+            console.error(profileError);
+        }
+        throw new Error(profileError?.message || "Failed to load profile");
     }
 
     return profileFromRow(profileRow as ProfileRow);
@@ -161,7 +178,7 @@ export async function register(input: RegisterInput, password?: string): Promise
     }
 
     const supabase = getSupabase();
-    const email = emailFromPhone(trimmedPhone);
+    const email = `${trimmedPhone}${HIDDEN_EMAIL_DOMAIN}`;
 
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -179,11 +196,23 @@ export async function register(input: RegisterInput, password?: string): Promise
     });
 
     if (error) {
+        console.error(error);
+        const isAlreadyExists =
+            error.code === "user_already_exists" ||
+            error.message.includes("already registered") ||
+            error.message.toLowerCase().includes("already registered");
+        if (isAlreadyExists) {
+            throw new Error("errExists");
+        }
+        throw new Error(error.message);
+    }
+
+    if (data.user?.identities && data.user.identities.length === 0) {
         throw new Error("errExists");
     }
 
-    if (!data.user || (data.user.identities && data.user.identities.length === 0)) {
-        throw new Error("errExists");
+    if (!data.user) {
+        throw new Error("No user returned from signup");
     }
 
     const { data: profileRow, error: profileError } = await supabase
@@ -193,6 +222,9 @@ export async function register(input: RegisterInput, password?: string): Promise
         .single();
 
     if (profileError || !profileRow) {
+        if (profileError) {
+            console.error(profileError);
+        }
         throw new Error(profileError?.message || "Failed to load profile");
     }
 

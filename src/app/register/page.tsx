@@ -12,8 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { useAuth, homePathForRole } from "@/lib/auth/AuthProvider";
-import type { Dictionary } from "@/lib/i18n/en";
+import { en, type Dictionary } from "@/lib/i18n/en";
 import type { UserRole } from "@/lib/types";
+
+function isDictionaryKey(key: string): key is keyof Dictionary {
+    return key in en;
+}
 
 const registerSchema = z.object({
     role: z.enum(["farmer", "buyer"]),
@@ -73,8 +77,8 @@ function RegisterForm() {
             );
             router.push(homePathForRole(user.role));
         } catch (err) {
-            if (err instanceof Error && err.message === "errExists") {
-                setServerError("errExists");
+            if (err instanceof Error) {
+                setServerError(err.message);
             } else {
                 setServerError("errExists");
             }
@@ -93,7 +97,7 @@ function RegisterForm() {
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                         {serverError && (
                             <div className="rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive">
-                                {t(serverError as keyof Dictionary)}
+                                {isDictionaryKey(serverError) ? t(serverError) : serverError}
                             </div>
                         )}
 
